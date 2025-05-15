@@ -58,8 +58,8 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String jwtToken = JWT.create()
             .withSubject(springUser.getUsername())
             .withArrayClaim("roles", roles.toArray(new String[roles.size()]))
-            .withExpiresAt(new Date(System.currentTimeMillis() + SecretParams.EXP_TIME)) // 10 days
-            .sign(Algorithm.HMAC256(SecretParams.SECRET)); // secret key
+            .withExpiresAt(new Date(System.currentTimeMillis() + SecretParams.EXP_TIME))
+            .sign(Algorithm.HMAC256(SecretParams.SECRET));
 
         // Add token to response header
         response.addHeader("Authorization", jwtToken);
