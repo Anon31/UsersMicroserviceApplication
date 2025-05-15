@@ -2,7 +2,6 @@ package tn.dev.usersmicroservice.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,7 +16,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // ← permet de nommer chaque champ au moment de la création
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
@@ -54,11 +52,10 @@ public class User {
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),       // colonne PK de User
-            inverseJoinColumns = @JoinColumn(name = "role_id") // colonne PK de Role
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
 
-    @Builder.Default
     private List<Role> roles = new ArrayList<>();
 
     @Embedded
@@ -81,29 +78,3 @@ public class User {
     })
     private Address deliveryAddress;
 }
-
-//firstname: string;
-//lastname: string;
-//username: string;
-//password: string;
-//email: string;
-//phone: string;
-//birthDate: Date;
-//createdAt: Date;
-//updatedAt: Date;
-//isActive: boolean;
-//roles: string[];
-//billing_address?: {
-//number: number;
-//street: string;
-//city: string;
-//zipCode: number;
-//state: string;
-//    };
-//delivery_address?: {
-//number: number;
-//street: string;
-//city: string;
-//zipCode: number;
-//state: string
-//    };
