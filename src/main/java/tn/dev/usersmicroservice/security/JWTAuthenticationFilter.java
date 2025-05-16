@@ -23,10 +23,6 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private final AuthenticationManager authenticationManager;
 
-    /*
-        * Constructor
-        * @param authenticationManager
-     */
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
         super();
         this.authenticationManager = authenticationManager;
@@ -46,7 +42,6 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         } catch (IOException e) {
             throw new RuntimeException("Error reading JSON: " + e.getMessage());
         }
-
         return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
     }
 
@@ -63,8 +58,8 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String jwtToken = JWT.create()
             .withSubject(springUser.getUsername())
             .withArrayClaim("roles", roles.toArray(new String[roles.size()]))
-            .withExpiresAt(new Date(System.currentTimeMillis() + SecretParams.EXP_TIME)) // 10 days
-            .sign(Algorithm.HMAC256(SecretParams.SECRET)); // secret key
+            .withExpiresAt(new Date(System.currentTimeMillis() + SecretParams.EXP_TIME))
+            .sign(Algorithm.HMAC256(SecretParams.SECRET));
 
         // Add token to response header
         response.addHeader("Authorization", jwtToken);
