@@ -35,6 +35,7 @@ public class SecurityConfig {
             }))
             .authorizeHttpRequests( requests -> requests
                     .requestMatchers("/login").permitAll()
+                    .requestMatchers("/register").permitAll()
                     .requestMatchers("/all").hasAuthority("ADMIN")
                     .anyRequest().authenticated())
             // Add a JWT authentication filter

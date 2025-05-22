@@ -1,9 +1,8 @@
 package tn.dev.usersmicroservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
@@ -37,6 +37,10 @@ public class User {
     private String email;
 
     private String phone;
+
+    // Used only for serialization (writing) when Spring returns the object as a JSON response.
+    // Transforms the LocalDate to "15/05/2002" instead of the ISO "2002-05-15".
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate birthDate;
 
     @CreatedDate
