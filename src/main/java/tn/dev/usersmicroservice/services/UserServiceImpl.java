@@ -15,6 +15,8 @@ import tn.dev.usersmicroservice.register.RegistrationRequest;
 import tn.dev.usersmicroservice.repositories.RoleRepository;
 import tn.dev.usersmicroservice.repositories.UserRepository;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +42,16 @@ public class UserServiceImpl implements UserService {
     public User registerUser(RegistrationRequest request) {
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException("Username déjà utilisé !");
+            throw new UsernameAlreadyExistsException("Ce nom d'utilisateur est déjà associée à un compte.");
         }
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("Email déjà utilisé !");
+            throw new EmailAlreadyExistsException("Cette adresse e-mail est déjà associée à un compte.");
         }
+
+        LocalDate birth = request.getBirthDate()
+                .withOffsetSameInstant(ZoneOffset.UTC)
+                .toLocalDate();
 
         User newUser = new User();
         newUser.setFirstname(request.getFirstname());
@@ -54,7 +60,7 @@ public class UserServiceImpl implements UserService {
         newUser.setEmail(request.getEmail());
         newUser.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
         newUser.setPhone(request.getPhone());
-        newUser.setBirthDate(request.getBirthDate());
+        newUser.setBirthDate(birth);
         newUser.setBillingAddress(toEntity(request.getBillingAddress()));
         newUser.setDeliveryAddress(toEntity(request.getDeliveryAddress()));
         newUser.setEnabled(false);
