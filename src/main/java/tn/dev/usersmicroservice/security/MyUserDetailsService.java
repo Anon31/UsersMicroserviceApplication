@@ -20,8 +20,8 @@ public class MyUserDetailsService implements UserDetailsService {
     UserService userService;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userService.findUserByUsername(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userService.findUserByEmail(email);
         if (user==null) throw new UsernameNotFoundException("Utilisateur introuvable !");
 
         List<GrantedAuthority> auths = new ArrayList<>();
@@ -30,6 +30,6 @@ public class MyUserDetailsService implements UserDetailsService {
             auths.add(authority);
         });
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), auths);
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), auths);
     }
 }
