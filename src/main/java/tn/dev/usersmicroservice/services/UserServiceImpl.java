@@ -1,6 +1,5 @@
 package tn.dev.usersmicroservice.services;
 
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,17 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import tn.dev.usersmicroservice.entities.Address;
 import tn.dev.usersmicroservice.dtos.AddressDTO;
-
 import tn.dev.usersmicroservice.entities.User;
 import tn.dev.usersmicroservice.entities.Role;
 import tn.dev.usersmicroservice.exceptions.EmailAlreadyExistsException;
+import tn.dev.usersmicroservice.exceptions.UsernameAlreadyExistsException;
 import tn.dev.usersmicroservice.register.RegistrationRequest;
 import tn.dev.usersmicroservice.repositories.RoleRepository;
 import tn.dev.usersmicroservice.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Transactional
 @Service
@@ -35,30 +33,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        // Encrypt the password before saving
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        // Implementation for creating a user
         return userRepository.save(user);
-    }
-
-    private Address toEntity(AddressDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-        Address address = new Address();
-        address.setNumber(dto.getNumber());
-        address.setStreet(dto.getStreet());
-        address.setCity(dto.getCity());
-        address.setZipCode(dto.getZipCode());
-        address.setState(dto.getState());
-        return address;
     }
 
     public User registerUser(RegistrationRequest request) {
 
-        Optional<User> OptionalUser = userRepository.findByEmail(request.getEmail());
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new UsernameAlreadyExistsException("Username déjà utilisé !");
+        }
 
-        if (OptionalUser.isPresent()) throw new EmailAlreadyExistsException("Email déjà utilisé !");
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("Email déjà utilisé !");
+        }
 
         User newUser = new User();
         newUser.setFirstname(request.getFirstname());
@@ -74,26 +61,13 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(newUser);
 
-        Role userRole = roleRepository.findByRole("USER");
+        Role userRole = roleRepository.getByRoleOrThrow("USER");
         List<Role> roles = new ArrayList<>();
         roles.add(userRole);
         newUser.setRoles(roles);
 
-
-
         return userRepository.save(newUser);
     }
-
-//    @Override
-//    public User findUserByEmail(String email) {
-//        // Implementation for finding a user by email
-//        return userRepository.findByEmail(email);
-//    }
-
-//    @Override
-//    public Optional<User> findUserByEmail(String email) {
-//        return userRepository.findByEmail(email);
-//    }
 
     @Override
     public User findUserByEmail(String email) {
@@ -101,7 +75,24 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
     }
 
+    @Override
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
+    }
 
+    private Address toEntity(AddressDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Address address = new Address();
+        address.setNumber(dto.getNumber());
+        address.setStreet(dto.getStreet());
+        address.setCity(dto.getCity());
+        address.setZipCode(dto.getZipCode());
+        address.setState(dto.getState());
+        return address;
+    }
 
 
 
@@ -127,11 +118,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
-    @Override
-    public User findUserByUsername(String username) {
-        // Implementation for finding a user by username
-        return userRepository.findByUsername(username);
-    }
+
 
     @Override
     public User findUserById(Long id) {
@@ -145,15 +132,40 @@ public class UserServiceImpl implements UserService {
         return roleRepository.save(role);
     }
 
+//    @Override
+//    public User addRoleToUser(String username, String roleName) {
+//        // Implementation for adding a role to a user
+//        User user = userRepository.findByUsername(username);
+//        Role role = roleRepository.findByRole(roleName);
+//
+//        user.getRoles().add(role);
+//        // userRepository.save(user);
+//
+//        return user;
+//    }
+
     @Override
+    @Transactional
     public User addRoleToUser(String username, String roleName) {
-        // Implementation for adding a role to a user
-        User user = userRepository.findByUsername(username);
-        Role role = roleRepository.findByRole(roleName);
+        // 1) Récupération de l'utilisateur
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Utilisateur introuvable avec le username : " + username
+                ));
 
-        user.getRoles().add(role);
-        // userRepository.save(user);
+        // 2) Récupération du rôle
+        Role role = roleRepository.findByRole(roleName)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Rôle introuvable : " + roleName
+                ));
 
-        return user;
+        // 3) Ajout du rôle à la collection
+        if (!user.getRoles().contains(role)) {
+            user.getRoles().add(role);
+        }
+
+        // 4) Sauvegarde et retour
+        return userRepository.save(user);
     }
+
 }
